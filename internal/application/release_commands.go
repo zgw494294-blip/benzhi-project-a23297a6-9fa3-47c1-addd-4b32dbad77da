@@ -2,6 +2,7 @@ package application
 
 import (
 	"encoding/json"
+	"time"
 
 	"wildframe/internal/domain"
 	"wildframe/internal/evidence"
@@ -12,12 +13,24 @@ type verificationCacheKey struct {
 	CredentialID    string
 	CollectionID    string
 	ManifestVersion int
+	ManifestDigest  string
+	Signature       string
+	PublicKey       string
+	IssuedBy        string
+	IssuedAt        time.Time
+	Algorithm       string
 }
 
 func verificationKey(envelope evidence.CredentialEnvelope) verificationCacheKey {
 	return verificationCacheKey{
 		CredentialID: envelope.CredentialID, CollectionID: envelope.CollectionID,
 		ManifestVersion: envelope.ManifestVersion,
+		ManifestDigest:  envelope.ManifestDigest,
+		Signature:       envelope.Signature,
+		PublicKey:       envelope.PublicKey,
+		IssuedBy:        envelope.IssuedBy,
+		IssuedAt:        envelope.IssuedAt,
+		Algorithm:       envelope.Algorithm,
 	}
 }
 
