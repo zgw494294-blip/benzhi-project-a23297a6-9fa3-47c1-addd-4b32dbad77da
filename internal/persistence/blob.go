@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"sync"
 )
 
 const MaxBlobBytes int64 = 12 << 20
@@ -17,8 +16,6 @@ var safeDigest = regexp.MustCompile(`^[a-f0-9]{64}$`)
 
 type BlobStore struct {
 	directory string
-	mu        sync.Mutex
-	opened    map[string]*os.File
 }
 
 func NewBlobStore(dataDirectory string) (*BlobStore, error) {
@@ -26,7 +23,7 @@ func NewBlobStore(dataDirectory string) (*BlobStore, error) {
 	if err := os.MkdirAll(directory, 0o700); err != nil {
 		return nil, err
 	}
-	return &BlobStore{directory: directory, opened: make(map[string]*os.File)}, nil
+	return &BlobStore{directory: directory}, nil
 }
 
 func (b *BlobStore) Save(expectedDigest, mediaType string, source io.Reader) (string, int64, error) {
@@ -78,15 +75,9 @@ func (b *BlobStore) Open(key string) (*os.File, error) {
 	if !safeDigest.MatchString(key) {
 		return nil, fmt.Errorf("载荷键无效")
 	}
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	if file, ok := b.opened[key]; ok {
-		return file, nil
-	}
 	file, err := os.Open(filepath.Join(b.directory, key))
 	if err != nil {
 		return nil, err
 	}
-	b.opened[key] = file
 	return file, nil
 }
