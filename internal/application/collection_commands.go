@@ -82,10 +82,6 @@ func (s *Service) RegisterEvidence(collectionID string, command RegisterEvidence
 	if err != nil || existing {
 		return result, err
 	}
-	blobKey, byteSize, err := s.blobs.Save(command.SHA256Digest, command.MediaType, bytes.NewReader(command.Payload))
-	if err != nil {
-		return result, domain.NewError(domain.CodeValidation, "%s", err)
-	}
 	err = s.repo.Update("evidence.registered", collectionID, now, func(state *persistence.State) error {
 		if reused, reuseErr := persistence.Reuse(*state, scope, command.IdempotencyKey, fingerprint, &result); reuseErr != nil || reused {
 			return reuseErr
@@ -104,11 +100,16 @@ func (s *Service) RegisterEvidence(collectionID string, command RegisterEvidence
 		}
 		item := domain.ImageEvidence{EvidenceID: newID("ev"), CollectionID: collectionID, OriginalName: command.OriginalName,
 			CapturedAt: command.CapturedAt.UTC(), CameraSite: command.CameraSite, SHA256Digest: command.SHA256Digest,
-			MediaType: command.MediaType, ByteSize: byteSize, PixelWidth: command.PixelWidth, PixelHeight: command.PixelHeight,
-			BlobKey: blobKey, RegisteredAt: now}
+			MediaType: command.MediaType, ByteSize: int64(len(command.Payload)), PixelWidth: command.PixelWidth, PixelHeight: command.PixelHeight,
+			BlobKey: command.SHA256Digest, RegisteredAt: now}
 		if err := domain.ValidateEvidence(collection, item); err != nil {
 			return err
 		}
+		blobKey, byteSize, err := s.blobs.Save(command.SHA256Digest, command.MediaType, bytes.NewReader(command.Payload))
+		if err != nil {
+			return domain.NewError(domain.CodeValidation, "%s", err)
+		}
+		item.BlobKey, item.ByteSize = blobKey, byteSize
 		from := collection.Status
 		domain.Touch(&collection, now)
 		state.Collections[collectionID] = collection
