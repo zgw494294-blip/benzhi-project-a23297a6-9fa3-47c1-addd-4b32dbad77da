@@ -93,14 +93,17 @@ func (r *Repository) Update(eventType, collectionID string, now time.Time, fn fu
 		return err
 	}
 	event := LedgerEvent{SchemaVersion: 1, Sequence: r.sequence + 1, PreviousHash: r.head, EventType: eventType, CollectionID: collectionID, OccurredAt: now.UTC().Format(time.RFC3339Nano), Projection: projection}
-	if err := appendLedger(r.ledgerPath, event); err != nil {
+	event.Hash, err = eventHash(event)
+	if err != nil {
 		return err
 	}
-	event.Hash, _ = eventHash(event)
-	r.state, r.sequence, r.head = next, event.Sequence, event.Hash
 	if err := writeSnapshot(r.snapshotPath, event.Sequence, event.Hash, next); err != nil {
 		return err
 	}
+	if err := appendLedger(r.ledgerPath, event); err != nil {
+		return err
+	}
+	r.state, r.sequence, r.head = next, event.Sequence, event.Hash
 	return nil
 }
 
