@@ -40,13 +40,27 @@ func NewState() State {
 }
 
 func cloneState(state State) (State, error) {
-	raw, err := json.Marshal(state)
-	if err != nil {
-		return State{}, err
+	return State{
+		Collections:      cloneMap(state.Collections),
+		Evidence:         cloneMap(state.Evidence),
+		Revisions:        cloneMap(state.Revisions),
+		Findings:         cloneMap(state.Findings),
+		Decisions:        cloneMap(state.Decisions),
+		DecisionHistory:  cloneMap(state.DecisionHistory),
+		RemediationTasks: cloneMap(state.RemediationTasks),
+		QualityRuns:      cloneMap(state.QualityRuns),
+		ManifestPreviews: cloneMap(state.ManifestPreviews),
+		Credentials:      cloneMap(state.Credentials),
+		Manifests:        cloneMap(state.Manifests),
+		Audits:           cloneMap(state.Audits),
+		Idempotency:      cloneMap(state.Idempotency),
+	}, nil
+}
+
+func cloneMap[K comparable, V any](source map[K]V) map[K]V {
+	copy := make(map[K]V, len(source))
+	for key, value := range source {
+		copy[key] = value
 	}
-	copy := NewState()
-	if err := json.Unmarshal(raw, &copy); err != nil {
-		return State{}, err
-	}
-	return copy, nil
+	return copy
 }
