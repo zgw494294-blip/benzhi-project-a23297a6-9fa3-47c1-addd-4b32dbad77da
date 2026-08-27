@@ -27,6 +27,15 @@ type State struct {
 	Idempotency      map[string]IdempotencyRecord                      `json:"idempotency"`
 }
 
+type recoveryState struct {
+	Collections     map[string]domain.ImageCollection                 `json:"collections"`
+	Evidence        map[string][]domain.ImageEvidence                 `json:"evidence"`
+	Revisions       map[string][]domain.AnnotationRevision            `json:"revisions"`
+	Findings        map[string][]domain.QualityFinding                `json:"findings"`
+	Decisions       map[string]map[string]domain.AdjudicationDecision `json:"decisions"`
+	DecisionHistory map[string][]domain.AdjudicationDecision          `json:"decisionHistory"`
+}
+
 func NewState() State {
 	return State{
 		Collections: map[string]domain.ImageCollection{}, Evidence: map[string][]domain.ImageEvidence{},
@@ -49,4 +58,19 @@ func cloneState(state State) (State, error) {
 		return State{}, err
 	}
 	return copy, nil
+}
+
+func decodeRecoveryState(raw []byte) (State, error) {
+	var recovered recoveryState
+	if err := json.Unmarshal(raw, &recovered); err != nil {
+		return State{}, err
+	}
+	state := NewState()
+	state.Collections = recovered.Collections
+	state.Evidence = recovered.Evidence
+	state.Revisions = recovered.Revisions
+	state.Findings = recovered.Findings
+	state.Decisions = recovered.Decisions
+	state.DecisionHistory = recovered.DecisionHistory
+	return state, nil
 }

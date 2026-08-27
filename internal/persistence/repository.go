@@ -44,9 +44,11 @@ func Open(directory string) (*Repository, error) {
 	}
 	if len(events) > 0 {
 		last := events[len(events)-1]
-		if err := json.Unmarshal(last.Projection, &repo.state); err != nil {
+		recovered, err := decodeRecoveryState(last.Projection)
+		if err != nil {
 			return nil, fmt.Errorf("重放最终投影失败: %w", err)
 		}
+		repo.state = recovered
 		repo.sequence, repo.head = last.Sequence, last.Hash
 		if snapshot.Sequence > repo.sequence || (snapshot.Sequence == repo.sequence && snapshot.LedgerHead != repo.head) {
 			return nil, fmt.Errorf("投影快照与事件账本不一致")
