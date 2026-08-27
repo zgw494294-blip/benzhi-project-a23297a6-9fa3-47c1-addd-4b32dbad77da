@@ -47,7 +47,7 @@ func (s *Server) HandleRecalculateQuality(writer http.ResponseWriter, request *h
 		writeError(writer, err)
 		return
 	}
-	run, err := s.service.RecalculateQuality(request.PathValue("collectionID"), command)
+	run, err := s.service.RecalculateQualityContext(request.Context(), request.PathValue("collectionID"), command)
 	if err != nil {
 		writeError(writer, err)
 		return
