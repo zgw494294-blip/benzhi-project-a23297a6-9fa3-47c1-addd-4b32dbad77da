@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="自然保护区红外相机影像标注、仲裁和发布工作台">
+  <title>野镜影像发布工作台</title>
+  <link rel="stylesheet" href="/assets/app.css">
+  <link rel="stylesheet" href="/assets/extensions.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><span class="eyebrow">WILDFRAME / 科研数据治理</span><h1>野镜影像发布工作台</h1></div>
+    <div id="health" class="health">正在检查账本…</div>
+  </header>
+  <main>
+    <aside class="sidebar">
+      <button id="newCollection" class="primary">＋ 建立影像批次</button>
+      <h2>影像批次</h2>
+      <div id="collectionList" class="collection-list"></div>
+    </aside>
+    <section class="workspace">
+      <div id="emptyState" class="empty-state"><div class="lens">◎</div><h2>建立或选择一个批次</h2><p>从证据登记开始，经过双席位盲标、质检仲裁和冻结签发，形成不可悄然改写的发布记录。</p></div>
+      <div id="collectionView" hidden>
+        <section class="hero-card">
+          <div><span id="statusBadge" class="status"></span><h2 id="collectionTitle"></h2><p id="collectionMeta"></p></div>
+          <div class="version">聚合版本 <strong id="version"></strong></div>
+        </section>
+        <nav class="steps" aria-label="业务阶段">
+          <button data-panel="evidence">01 证据</button><button data-panel="annotations">02 双席位标注</button><button data-panel="quality">03 质检与仲裁</button><button data-panel="release">04 冻结与发布</button><button data-panel="audit">05 审计</button>
+        </nav>
+        <section id="panel-evidence" class="panel">
+          <div class="panel-title"><div><span class="kicker">EVIDENCE QUEUE</span><h2>影像证据队列</h2></div><button id="openUpload">登记影像</button></div>
+          <div id="evidenceGrid" class="evidence-grid"></div>
+        </section>
+        <section id="panel-annotations" class="panel" hidden>
+          <div class="panel-title"><div><span class="kicker">BLIND REVIEW</span><h2>双席位独立标注</h2></div><label>查看席位 <select id="viewerSeat"></select></label></div>
+          <p class="notice">同一证据的两个判断在双方均提交前互相隐藏。整改提交会生成新修订并保留替代链。</p>
+          <div class="toolbar"><strong id="seatProgress">选择席位后显示进度</strong><label>待办筛选<select id="taskFilter"><option value="">全部</option><option value="pending">未标注</option><option value="submitted">已标注</option><option value="remediation">待整改</option></select></label><label>稳定排序<select id="evidenceSort"><option value="registered">登记顺序</option><option value="capturedAt">采集时间</option></select></label><button id="nextTask">下一待办</button></div>
+          <div id="annotationArea"></div>
+        </section>
+        <section id="panel-quality" class="panel" hidden>
+          <div class="panel-title"><div><span class="kicker">QUALITY & ADJUDICATION</span><h2>确定性质检与专家仲裁</h2></div><div class="actions"><button id="recalculateQuality">重新质检</button><button id="approveReview">专家复核通过</button></div></div>
+          <div id="qualitySummary" class="summary-grid"></div>
+          <div class="toolbar"><label>规则<input id="findingRule" placeholder="全部规则"></label><label>严重度<select id="findingSeverity"><option value="">全部</option><option value="blocking">阻断</option><option value="warning">警告</option></select></label><label>状态<select id="findingStatus"><option value="open">开放</option><option value="resolved">已关闭</option><option value="">全部</option></select></label><label>仲裁队列<select id="queueFilter"><option value="">全部</option><option value="undecided">未决定</option><option value="decided">已决定</option><option value="remediation">等待整改</option></select></label></div>
+          <div id="remediationTasks"></div>
+          <div id="findingList"></div>
+        </section>
+        <section id="panel-release" class="panel" hidden>
+          <div class="panel-title"><div><span class="kicker">IMMUTABLE RELEASE</span><h2>冻结清单与发布凭据</h2></div><button id="previewManifest">生成清单预览</button></div>
+          <div id="manifestBox" class="codebox">复核通过后可生成规范化清单。</div>
+          <div class="actions"><button id="freezeManifest">确认摘要并冻结</button><button id="issueCredential">签发发布凭据</button><button id="verifyCredential">验证凭据</button></div>
+          <label>导入凭据 JSON<textarea id="credentialText" placeholder="粘贴凭据，或选择本地 JSON 文件"></textarea></label><div class="actions"><input id="credentialFile" type="file" accept="application/json,.json"><button id="clearCredential">清空</button></div>
+          <div id="verification" class="verification"></div>
+        </section>
+        <section id="panel-audit" class="panel" hidden>
+          <div class="panel-title"><div><span class="kicker">CHAIN OF CUSTODY</span><h2>状态与操作审计</h2></div></div>
+          <div class="toolbar"><label>操作者<input id="auditActor"></label><label>动作<input id="auditAction"></label><label>开始时间<input id="auditFrom" type="datetime-local"></label><label>结束时间<input id="auditTo" type="datetime-local"></label><button id="queryAudit">查询</button></div>
+          <div id="auditIntegrity" class="notice"></div><div id="statusDurations" class="summary-grid"></div>
+          <ol id="auditList" class="timeline"></ol>
+          <button id="auditNext">下一页</button>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="collectionDialog"><form id="collectionForm"><h2>建立影像批次</h2><div class="form-grid"><label>保护区<input name="reserveName" required value="青岚自然保护区"></label><label>相机点位<input name="cameraSite" required value="QL-CAM-07"></label><label>拍摄开始<input name="capturedFrom" type="datetime-local" required></label><label>拍摄结束<input name="capturedTo" type="datetime-local" required></label><label>规则版本<input name="ruleSetVersion" required value="species-cn-2026.1"></label><label>席位 A<input name="seatA" required value="annotator-a"></label><label>席位 B<input name="seatB" required value="annotator-b"></label></div><div class="dialog-actions"><button type="button" data-close>取消</button><button class="primary">建档并开始标注</button></div></form></dialog>
+  <dialog id="uploadDialog"><form id="uploadForm"><h2>批量登记影像证据</h2><label>本地影像（可多选）<input name="files" type="file" accept="image/jpeg,image/png,image/webp" multiple required></label><p class="notice">逐项读取原始文件名、文件拍摄时间、像素尺寸和媒体类型；缺失信息会在提交前标出。服务端重新计算摘要并检查真实媒体类型。单项最大 12 MiB。</p><div id="uploadItems"></div><div class="dialog-actions"><button type="button" data-close>取消</button><button class="primary">批量登记</button></div></form></dialog>
+  <dialog id="annotationDialog"><form id="annotationForm"><h2>提交独立判断</h2><input name="evidenceID" type="hidden"><input name="supersedesRevisionID" type="hidden"><label>席位<select name="seatID" required></select></label><label>可辨识性<select name="identifiability"><option value="identifiable">可辨识</option><option value="unidentifiable">无法辨识</option></select></label><div class="form-grid"><label>物种代码<input name="speciesCode" value="ursus-thibetanus"></label><label>个体数量<input name="individualCount" type="number" min="0" max="999" value="1"></label><label>置信度<input name="confidence" type="number" min="0" max="1" step="0.01" value="0.9"></label><label>无法辨识原因<input name="unidentifiableReason"></label></div><label>备注<textarea name="note"></textarea></label><div class="dialog-actions"><button type="button" data-close>取消</button><button class="primary">提交修订</button></div></form></dialog>
+  <dialog id="adjudicationDialog"><form id="adjudicationForm"><h2>专家仲裁</h2><input name="evidenceID" type="hidden"><label>处理方式<select name="action"><option value="adopt_seat">采纳指定席位</option><option value="new_conclusion">给出新结论</option><option value="request_remediation">要求定向整改</option></select></label><label>目标席位<select name="targetSeatID"></select></label><div class="form-grid"><label>最终物种代码<input name="finalSpeciesCode" value="ursus-thibetanus"></label><label>最终数量<input name="finalCount" type="number" min="0" max="999" value="1"></label></div><label>理由<textarea name="rationale" required>专家依据影像关键特征完成复核。</textarea><div id="decisionPreview" class="notice">提交前请先预校验。</div></label><div class="dialog-actions"><button type="button" data-close>取消</button><button type="button" id="previewDecision">预校验</button><button class="primary">记录决定</button></div></form></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

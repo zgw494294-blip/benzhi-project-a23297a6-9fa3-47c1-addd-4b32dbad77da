@@ -1,0 +1,14 @@
+.toolbar { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; padding: 12px; background: #f5f5ee; border: 1px solid var(--line); border-radius: 10px; margin: 12px 0; }
+.toolbar label { margin: 0; min-width: 130px; }
+.toolbar strong { margin-right: auto; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 12px 0; }
+.summary-grid > div { display: grid; gap: 3px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: white; }
+.summary-grid strong { font-size: 22px; color: var(--green); }
+.summary-grid span { font-size: 12px; color: var(--muted); }
+.queue-item { border: 1px solid var(--line); border-radius: 11px; padding: 14px; margin: 12px 0; }
+.queue-item .panel-title { margin-bottom: 5px; }
+.upload-row { display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding: 10px 0; }
+.upload-row label { margin: 0; }
+.upload-row.invalid { border-left: 4px solid var(--red); padding-left: 8px; }
+#uploadDialog { max-width: 900px; }
+@media (max-width: 800px) { .upload-row { grid-template-columns: 1fr; } .toolbar > * { width: 100%; } }
