@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"wildframe/internal/domain"
@@ -18,10 +19,20 @@ type Service struct {
 	quality *evidence.QualityEngine
 	signer  *evidence.Signer
 	now     func() time.Time
+
+	viewMu    sync.RWMutex
+	viewCache map[string]CollectionView
 }
 
 func NewService(repo *persistence.Repository, blobs *persistence.BlobStore, quality *evidence.QualityEngine, signer *evidence.Signer) *Service {
-	return &Service{repo: repo, blobs: blobs, quality: quality, signer: signer, now: time.Now}
+	return &Service{
+		repo:      repo,
+		blobs:     blobs,
+		quality:   quality,
+		signer:    signer,
+		now:       time.Now,
+		viewCache: make(map[string]CollectionView),
+	}
 }
 
 func (s *Service) SetClock(now func() time.Time) {

@@ -16,6 +16,15 @@ func (s *Service) GetCollection(collectionID, viewerSeat string) (CollectionView
 }
 
 func (s *Service) GetCollectionWithQuery(collectionID string, query CollectionQuery) (CollectionView, error) {
+	if query.ViewerSeat != "" {
+		s.viewMu.RLock()
+		cached, ok := s.viewCache[collectionID]
+		s.viewMu.RUnlock()
+		if ok {
+			return cached, nil
+		}
+	}
+
 	var view CollectionView
 	err := s.repo.Read(func(state persistence.State) error {
 		collection, err := collectionOf(state, collectionID)
@@ -110,6 +119,11 @@ func (s *Service) GetCollectionWithQuery(collectionID string, query CollectionQu
 		}
 		return nil
 	})
+	if err == nil && query.ViewerSeat != "" {
+		s.viewMu.Lock()
+		s.viewCache[collectionID] = view
+		s.viewMu.Unlock()
+	}
 	return view, err
 }
 
