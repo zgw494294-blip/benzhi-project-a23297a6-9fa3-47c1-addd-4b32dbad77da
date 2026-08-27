@@ -8,6 +8,19 @@ import (
 	"wildframe/internal/persistence"
 )
 
+type verificationCacheKey struct {
+	CredentialID    string
+	CollectionID    string
+	ManifestVersion int
+}
+
+func verificationKey(envelope evidence.CredentialEnvelope) verificationCacheKey {
+	return verificationCacheKey{
+		CredentialID: envelope.CredentialID, CollectionID: envelope.CollectionID,
+		ManifestVersion: envelope.ManifestVersion,
+	}
+}
+
 func (s *Service) Freeze(collectionID string, command FreezeCommand) (domain.ImageCollection, error) {
 	if err := require(command.CommandMeta, RolePublisher); err != nil {
 		return domain.ImageCollection{}, err
@@ -93,9 +106,18 @@ func (s *Service) IssueCredential(collectionID string, command IssueCommand) (ev
 }
 
 func (s *Service) VerifyCredential(envelope evidence.CredentialEnvelope) VerificationResult {
+	cacheKey := verificationKey(envelope)
+	s.verifyMu.RLock()
+	cached, ok := s.verifyCache[cacheKey]
+	s.verifyMu.RUnlock()
+	if ok {
+		return cached
+	}
+
 	valid, message := evidence.VerifyCredential(envelope, "")
 	result := VerificationResult{Valid: false, SignatureValid: valid, SignatureStatus: "invalid", BindingStatus: "not_checked", Message: message, CredentialID: envelope.CredentialID, CollectionID: envelope.CollectionID, ManifestDigest: envelope.ManifestDigest, ManifestVersion: envelope.ManifestVersion, IssuedBy: envelope.IssuedBy, IssuedAt: envelope.IssuedAt}
 	if !valid {
+		s.rememberVerification(cacheKey, result)
 		return result
 	}
 	result.SignatureStatus = "valid"
@@ -124,5 +146,12 @@ func (s *Service) VerifyCredential(envelope evidence.CredentialEnvelope) Verific
 	if err != nil {
 		result.Valid, result.BindingStatus, result.Message = false, "read_error", "读取冻结清单失败"
 	}
+	s.rememberVerification(cacheKey, result)
 	return result
+}
+
+func (s *Service) rememberVerification(key verificationCacheKey, result VerificationResult) {
+	s.verifyMu.Lock()
+	s.verifyCache[key] = result
+	s.verifyMu.Unlock()
 }
