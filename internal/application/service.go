@@ -20,6 +20,24 @@ type Service struct {
 	now     func() time.Time
 }
 
+type useCaseError struct {
+	operation string
+	cause     error
+}
+
+func (e *useCaseError) Error() string {
+	return fmt.Sprintf("%s：%v", e.operation, e.cause)
+}
+
+func (e *useCaseError) Unwrap() error { return e.cause }
+
+func wrapUseCase(operation string, err error) error {
+	if err == nil {
+		return nil
+	}
+	return &useCaseError{operation: operation, cause: err}
+}
+
 func NewService(repo *persistence.Repository, blobs *persistence.BlobStore, quality *evidence.QualityEngine, signer *evidence.Signer) *Service {
 	return &Service{repo: repo, blobs: blobs, quality: quality, signer: signer, now: time.Now}
 }

@@ -80,7 +80,7 @@ func (s *Service) Adjudicate(collectionID string, command AdjudicateCommand) (do
 		result = decision
 		return remember(state, scope, command.IdempotencyKey, fingerprint, result)
 	})
-	return result, err
+	return result, wrapUseCase("提交仲裁", err)
 }
 
 func validateAdjudication(collection domain.ImageCollection, command AdjudicateCommand, latest map[string]domain.AnnotationRevision, now time.Time) (domain.AdjudicationDecision, error) {
@@ -147,7 +147,7 @@ func (s *Service) PreviewAdjudication(collectionID string, command AdjudicateCom
 		}
 		return nil
 	})
-	return result, err
+	return result, wrapUseCase("仲裁预校验", err)
 }
 
 func (s *Service) ApproveReview(collectionID string, command ReviewCommand) (domain.ImageCollection, error) {
@@ -184,5 +184,5 @@ func (s *Service) ApproveReview(collectionID string, command ReviewCommand) (dom
 		result = collection
 		return remember(state, "review:"+collectionID, command.IdempotencyKey, fingerprint, result)
 	})
-	return result, err
+	return result, wrapUseCase("专家复核", err)
 }

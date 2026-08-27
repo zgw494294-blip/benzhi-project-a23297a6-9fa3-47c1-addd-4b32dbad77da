@@ -51,7 +51,7 @@ func (s *Service) Freeze(collectionID string, command FreezeCommand) (domain.Ima
 		result = collection
 		return remember(state, "freeze:"+collectionID, command.IdempotencyKey, fingerprint, result)
 	})
-	return result, err
+	return result, wrapUseCase("冻结清单", err)
 }
 
 func (s *Service) IssueCredential(collectionID string, command IssueCommand) (evidence.CredentialEnvelope, error) {
@@ -89,7 +89,7 @@ func (s *Service) IssueCredential(collectionID string, command IssueCommand) (ev
 		addAuditObject(state, collection, "credential.issued", command.Actor, "签发 Ed25519 发布凭据", from, now, "credential", result.CredentialID)
 		return remember(state, "issue:"+collectionID, command.IdempotencyKey, fingerprint, result)
 	})
-	return result, err
+	return result, wrapUseCase("签发凭据", err)
 }
 
 func (s *Service) VerifyCredential(envelope evidence.CredentialEnvelope) VerificationResult {

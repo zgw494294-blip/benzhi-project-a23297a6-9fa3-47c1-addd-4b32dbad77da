@@ -154,7 +154,7 @@ func (s *Service) PreviewManifest(collectionID string) (ManifestPreview, error) 
 		state.ManifestPreviews[collectionID] = domain.ManifestPreviewRecord{CollectionID: collectionID, CollectionVersion: collection.Version, Digest: digest, Canonical: append([]byte(nil), canonical...), GeneratedAt: now}
 		return nil
 	})
-	return preview, err
+	return preview, wrapUseCase("清单预览", err)
 }
 
 func (s *Service) buildManifest(state persistence.State, collection domain.ImageCollection) (evidence.Manifest, []byte, string, error) {

@@ -356,7 +356,7 @@ func (s *Service) QueryAudit(collectionID string, query AuditQuery) (AuditPage, 
 		}
 		return nil
 	})
-	return page, err
+	return page, wrapUseCase("审计查询", err)
 }
 
 func (s *Service) ListCollections() ([]domain.ImageCollection, error) {
